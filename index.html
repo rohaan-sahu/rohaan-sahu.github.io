@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Archetype Survey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            height: 10px;
+            width: 100%;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            width: 0;
+            background: #4caf50;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .options button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .options button:hover {
+            background: #388e3c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .result-button, .retake-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .result-button:hover, .retake-button:hover {
+            background: #388e3c;
+        }
+
+        .archetype {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="survey-container">
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progress-bar-inner"></div>
+        </div>
+        <div id="question-container">
+            <!-- Question will be dynamically injected here -->
+        </div>
+    </div>
+
+    <script>
+        class Question {
+            constructor(question, questionVariable, options, optionVariables) {
+                this.question = question;
+                this.questionVariable = questionVariable;
+                this.options = options;
+                this.optionVariables = optionVariables;
+            }
+        }
+
+        // Define the questions
+        const questions = [
+            new Question(
+                "How do you usually handle unexpected income, like a bonus or gift?",
+                "handling-income",
+                ["Save it all.", "Spend part of it and save the rest.", "Use it for something I’ve been wanting or needing.", "Invest it in something risky or exciting."],
+                ["1a", "1b", "1c", "1d"]
+            ),
+            new Question(
+                "What motivates your financial decisions the most?",
+                "motivation",
+                ["Security and peace of mind.", "Enjoying life to the fullest.", "Growing wealth and financial independence.", "Helping others and making an impact."],
+                ["2a", "2b", "2c", "2d"]
+            ),
+            new Question(
+                "How do you approach debt?",
+                "debt",
+                ["Avoid it at all costs.", "Use it strategically for investments or big goals.", "Use it as needed and manage it later.", "I don’t think about it much—it’s part of life."],
+                ["3a", "3b", "3c", "3d"]
+            ),
+            new Question(
+                "What’s your attitude toward saving?",
+                "saving-attitude",
+                ["I save religiously and avoid unnecessary spending.", "I save when I can but prioritize living in the moment.", "I save for big goals but am comfortable spending for enjoyment.", "Saving is secondary to supporting loved ones or experiences."],
+                ["4a", "4b", "4c", "4d"]
+            ),
+            new Question(
+                "If you had $10,000 right now, what would you do?",
+                "windfall",
+                ["Save it in a high-interest account or emergency fund.", "Spend part of it and save the rest.", "Invest it in stocks, real estate, or a business.", "Use it to help family, friends, or a cause I care about."],
+                ["5a", "5b", "5c", "5d"]
+            ),
+            new Question(
+                "What’s your ultimate financial goal?",
+                "financial-goal",
+                ["To retire early with financial security.", "To live a comfortable and enjoyable life without stress.", "To achieve financial freedom and grow significant wealth.", "To provide for loved ones and support meaningful causes."],
+                ["6a", "6b", "6c", "6d"]
+            )
+        ];
+
+        let currentQuestionIndex = 0;
+        const answers = [];
+
+        const questionContainer = document.getElementById("question-container");
+        const progressBarInner = document.getElementById("progress-bar-inner");
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            questionContainer.innerHTML = `
+                <div class="question">${question.question}</div>
+                <div class="options">
+                    ${question.options
+                        .map((option, index) => `
+                            <button onclick="recordAnswer(${index})">${option}</button>
+                        `)
+                        .join("")}
+                </div>
+            `;
+
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressBarInner.style.width = `${progress}%`;
+        }
+
+        function recordAnswer(optionIndex) {
+            const question = questions[currentQuestionIndex];
+            answers.push({
+                questionNumber: currentQuestionIndex + 1,
+                questionVariable: question.questionVariable,
+                selectedAnswer: question.options[optionIndex],
+                answerVariable: question.optionVariables[optionIndex]
+            });
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            questionContainer.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Question #</th>
+                            <th>Variable</th>
+                            <th>Selected Answer</th>
+                            <th>Answer Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${answers
+                            .map(
+                                (answer) => `
+                                    <tr>
+                                        <td>${answer.questionNumber}</td>
+                                        <td>${answer.questionVariable}</td>
+                                        <td>${answer.selectedAnswer}</td>
+                                        <td>${answer.answerVariable}</td>
+                                    </tr>
+                                `
+                            )
+                            .join("")}
+                    </tbody>
+                </table>
+                <button class="result-button" onclick="showArchetype()">See your Financial Archetype</button>
+                <button class="retake-button" onclick="restartSurvey()">Retake Survey</button>
+            `;
+        }
+
+        function showArchetype() {
+            const archetypes = [
+                "The Saver",
+                "The Spender",
+                "The Investor",
+                "The Giver"
+            ];
+
+            // Simple logic to determine archetype based on answer variables
+            const score = answers.reduce((acc, answer) => {
+                if (answer.answerVariable.endsWith("a")) acc[0]++;
+                else if (answer.answerVariable.endsWith("b")) acc[1]++;
+                else if (answer.answerVariable.endsWith("c")) acc[2]++;
+                else if (answer.answerVariable.endsWith("d")) acc[3]++;
+                return acc;
+            }, [0, 0, 0, 0]);
+
+            const maxScoreIndex = score.indexOf(Math.max(...score));
+            const userArchetype = archetypes[maxScoreIndex];
+
+            questionContainer.innerHTML = `
+                <div class="archetype">You belong to the: ${userArchetype}</div>
+                <button class="retake-button" onclick="restartSurvey()">Retake Survey</button>
+            `;
+        }
+
+        function restartSurvey() {
+            currentQuestionIndex = 0;
+            answers.length = 0;
+            loadQuestion();
+        }
+
+        // Start the survey
+        loadQuestion();
+    </script>
+</body>
+</html>
